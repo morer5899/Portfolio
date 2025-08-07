@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaGithub, FaExternalLinkAlt, FaEye } from 'react-icons/fa';
 import axios from 'axios';
+import { getApiUrl } from '../../config';
+import { FaGithub, FaExternalLinkAlt, FaEye } from 'react-icons/fa';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
@@ -14,7 +15,7 @@ const Projects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/projects');
+      const response = await axios.get(getApiUrl('/api/projects'));
       if (response.data) {
         setProjects(response.data);
       }
@@ -110,7 +111,7 @@ const Projects = () => {
               {/* Project Image */}
               <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden">
                 <img
-                  src={project.image.startsWith('http') ? project.image : `http://localhost:5000${project.image}`}
+                  src={project.image.startsWith('http') ? project.image : getApiUrl(project.image)}
                   alt={project.title}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                   onError={(e) => {

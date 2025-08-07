@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
 import axios from 'axios';
+import { getApiUrl } from '../../config';
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const Contact = () => {
     setSubmitStatus('');
 
     try {
-      await axios.post('http://localhost:5000/api/contact', formData);
+      await axios.post(getApiUrl('/api/contact'), formData);
       setSubmitStatus('success');
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {

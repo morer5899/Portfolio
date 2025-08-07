@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaPlus, FaEdit, FaTrash, FaImage, FaSignOutAlt, FaSave, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl } from '../../config';
 
 const AdminDashboard = ({ onLogout }) => {
   const [projects, setProjects] = useState([]);
@@ -30,7 +31,7 @@ const AdminDashboard = ({ onLogout }) => {
 
   const fetchProjects = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/projects');
+      const response = await axios.get(getApiUrl('/api/projects'));
       setProjects(response.data);
     } catch (error) {
       console.log('Backend not available, using empty projects array');
@@ -159,7 +160,7 @@ const AdminDashboard = ({ onLogout }) => {
         setProjects(projects.map(p => p._id === editingProject._id ? response.data.project : p));
         setEditingProject(null);
       } else {
-        const response = await axios.post('http://localhost:5000/api/projects', formData, config);
+        const response = await axios.post(getApiUrl('/api/projects'), formData, config);
         setProjects([...projects, response.data.project]);
       }
       
@@ -177,7 +178,7 @@ const AdminDashboard = ({ onLogout }) => {
   const handleDelete = async (projectId) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
+        await axios.delete(getApiUrl(`/api/projects/${projectId}`));
         fetchProjects();
       } catch (error) {
         console.log('Backend not available - simulating delete');
@@ -324,7 +325,7 @@ const AdminDashboard = ({ onLogout }) => {
                     <div className="mt-4">
                       <p className="text-sm text-gray-400 mb-2">Preview:</p>
                       <img 
-                        src={imagePreview || `http://localhost:5000${projectForm.image}`} 
+                        src={imagePreview || getApiUrl(projectForm.image)}
                         alt="Preview" 
                         className="h-40 w-auto object-cover rounded-md border border-gray-700"
                       />
