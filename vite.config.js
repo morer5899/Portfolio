@@ -5,13 +5,19 @@ export default defineConfig(({ command, mode }) => {
   const isProduction = mode === 'production';
   
   return {
+    base: '/',
     plugins: [react()],
     server: {
       port: 3001,
       open: !process.env.VERCEL,
+      historyApiFallback: true,
+    },
+    preview: {
+      port: 3001,
+      open: !process.env.VERCEL,
     },
     build: {
-      outDir: 'dist', // Vercel expects 'dist' by default
+      outDir: 'dist',
       sourcemap: isProduction ? false : 'inline',
       minify: isProduction ? 'esbuild' : false,
       chunkSizeWarningLimit: 1000,
@@ -30,7 +36,7 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     define: {
-      'process.env.NODE_ENV': `"${process.env.NODE_ENV}"`,
+      'process.env.NODE_ENV': `"${mode}"`,
     },
   };
 });
