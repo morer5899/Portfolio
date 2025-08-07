@@ -111,7 +111,7 @@ const Projects = () => {
               {/* Project Image */}
               <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden">
                 <img
-                  src={project.image.startsWith('http') ? project.image : getApiUrl(project.image)}
+                  src={project.image?.url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%236366f1'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='18' fill='white' text-anchor='middle' dy='.3em'%3E" + project.title + "%3C/text%3E%3C/svg%3E"}
                   alt={project.title}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                   onError={(e) => {

@@ -15,7 +15,7 @@ const AdminDashboard = ({ onLogout }) => {
   const [projectForm, setProjectForm] = useState({
     title: '',
     description: '',
-    image: '',
+    image: { url: '' }, // Updated to match Cloudinary object structure
     technologies: '',
     githubUrl: '',
     liveUrl: '',
@@ -65,7 +65,7 @@ const AdminDashboard = ({ onLogout }) => {
     setProjectForm({
       title: '',
       description: '',
-      image: '',
+      image: { url: '' },
       technologies: '',
       githubUrl: '',
       liveUrl: '',
@@ -129,6 +129,8 @@ const AdminDashboard = ({ onLogout }) => {
     
     // Append all form fields to formData
     Object.entries(projectForm).forEach(([key, value]) => {
+      // Skip the image field when it's an object (Cloudinary)
+      if (key === 'image') return;
       if (key !== 'technologies' || value) {
         formData.append(key, value);
       }
@@ -137,6 +139,9 @@ const AdminDashboard = ({ onLogout }) => {
     // Append the image file if it exists
     if (imageFile) {
       formData.append('image', imageFile);
+    } else if (projectForm.image?.url && !imageFile) {
+      // If there's an existing image URL but no new file, ensure it's included
+      formData.append('existingImageUrl', projectForm.image.url);
     }
     
     // Convert technologies string to array
@@ -188,17 +193,23 @@ const AdminDashboard = ({ onLogout }) => {
   };
 
   const handleEdit = (project) => {
-    setEditingProject(project);
+    setEditingProject(project._id);
     setProjectForm({
       title: project.title,
       description: project.description,
-      image: project.image || '',
-      technologies: project.technologies?.join(', ') || '',
+      image: project.image || { url: '' },
+      technologies: Array.isArray(project.technologies) ? project.technologies.join(', ') : project.technologies || '',
       githubUrl: project.githubUrl || '',
       liveUrl: project.liveUrl || '',
       featured: project.featured || false
     });
-    setIsAddingProject(true);
+    // Set image preview if image exists
+    if (project.image?.url) {
+      setImagePreview(project.image.url);
+    } else {
+      setImagePreview(null);
+    }
+    setImageFile(null);
   };
 
   const handleLogout = () => {
@@ -321,13 +332,16 @@ const AdminDashboard = ({ onLogout }) => {
                       {imageFile ? imageFile.name : 'No file chosen'}
                     </span>
                   </div>
-                  {(imagePreview || projectForm.image) && (
+                  {(imagePreview || projectForm.image?.url) && (
                     <div className="mt-4">
                       <p className="text-sm text-gray-400 mb-2">Preview:</p>
                       <img 
-                        src={imagePreview || getApiUrl(projectForm.image)}
+                        src={imagePreview || projectForm.image.url} 
                         alt="Preview" 
-                        className="h-40 w-auto object-cover rounded-md border border-gray-700"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%236366f1'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='18' fill='white' text-anchor='middle' dy='.3em'%3E" + (projectForm.title || 'Project Image') + "%3C/text%3E%3C/svg%3E";
+                        }}
                       />
                     </div>
                   )}
@@ -440,7 +454,21 @@ const AdminDashboard = ({ onLogout }) => {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 hover:border-primary-500/50 transition-all duration-300"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Project Image */}
+                    {project.image?.url && (
+                      <div className="w-full md:w-48 flex-shrink-0">
+                        <img
+                          src={project.image.url}
+                          alt={project.title}
+                          className="w-full h-32 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%236366f1'/%3E%3Ctext x='200' y='150' font-family='Arial' font-size='18' fill='white' text-anchor='middle' dy='.3em'%3E${encodeURIComponent(project.title)}%3C/text%3E%3C/svg%3E`;
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         <h3 className="text-xl font-bold text-white">{project.title}</h3>
