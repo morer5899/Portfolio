@@ -250,10 +250,7 @@ const Projects = () => {
     },
   }), []);
 
-  // Memoized placeholder image function
-  const getPlaceholderImage = useCallback((title) => {
-    return `https://placehold.co/600x400/1a1a2e/ffffff?text=${encodeURIComponent(title || 'Project')}`;
-  }, []);
+ 
 
   // Optimized modal handlers with useCallback
   const openModal = useCallback((project) => {
@@ -341,7 +338,6 @@ const Projects = () => {
               <div className="cube-face"></div>
             </div>
           </div>
-          <p className="text-gray-400">Loading projects...</p>
         </div>
       </div>
     );
