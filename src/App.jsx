@@ -1,50 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from './components/Navbar/Navbar';
-import Hero from './components/Hero/Hero';
-import About from './components/About/About';
-import Skills from './components/Skills/Skills';
-import Projects from './components/Projects/Projects';
-import Contact from './components/Contact/Contact';
-import Footer from './components/Footer/Footer';
+import { AdminProvider, useAdmin } from './context/AdminContext';
+import Layout from './components/Layout/Layout';
 import Loader from './components/Loader/Loader';
-import AdminLogin from './components/Admin/AdminLogin';
-import AdminDashboard from './components/Admin/AdminDashboard';
+import ChatBot from './components/ChatBot/ChatBot';
 
-// Global styles
+// Lazy load pages
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const Skills = lazy(() => import('./pages/Skills'));
+const Projects = lazy(() => import('./pages/Projects'));
+const Contact = lazy(() => import('./pages/Contact'));
+const GitHubActivity = lazy(() => import('./pages/GitHubActivity'));
+const CodingActivity = lazy(() => import('./pages/CodingActivity'));
+
+const AdminLogin = lazy(() => import('./components/Admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
+
+// Protected Route Component
+
+const ProtectedRoute = ({ children }) => {
+  const { isAdmin, isLoading } = useAdmin();
+  
+  if (isLoading) {
+    return <Loader />; 
+  }
+  
+  if (!isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  
+  return children;
+};
+
 const globalStyles = `
   /* Global styles can be added here */
+  .chatbot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+  }
 `;
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin from localStorage
-    const adminStatus = localStorage.getItem('isAdmin');
-    if (adminStatus === 'true') {
-      setIsAdmin(true);
-    }
-
-    // Simulate loading time
     const timer = setTimeout(() => {
       setLoading(false);
     }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
-
-  const handleAdminLogin = () => {
-    setIsAdmin(true);
-    localStorage.setItem('isAdmin', 'true');
-  };
-
-  const handleAdminLogout = () => {
-    setIsAdmin(false);
-    localStorage.removeItem('isAdmin');
-  };
 
   if (loading) {
     return <Loader />;
@@ -53,40 +62,43 @@ function App() {
   return (
     <>
       <style>{globalStyles}</style>
-      <Router>
-        <div className="App bg-dark-900 text-gray-100 min-h-screen flex flex-col">
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/admin/login" element={
-                <AdminLogin onLogin={handleAdminLogin} />
-              } />
-              <Route path="/admin/dashboard" element={
-                isAdmin ? (
-                  <AdminDashboard onLogout={handleAdminLogout} />
-                ) : (
-                  <AdminLogin onLogin={handleAdminLogin} />
-                )
-              } />
-              <Route path="/" element={
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Navbar />
-                  <Hero />
-                  <About />
-                  <Skills />
-                  <Projects />
-                  <Contact />
-                  <Footer />
-                </motion.div>
-              } />
-            </Routes>
-          </AnimatePresence>
-        </div>
-      </Router>
+      <AdminProvider>
+        <Router>
+          <div className="App bg-dark-900 text-gray-100 min-h-screen flex flex-col">
+            <AnimatePresence mode="wait">
+              <Suspense fallback={<Loader />}>
+                <Routes>
+                  {/* Admin login route - PUBLIC */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  
+                  {/* Admin dashboard route - PROTECTED */}
+                  <Route 
+                    path="/admin/dashboard" 
+                    element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Main routes - INSIDE Layout */}
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="skills" element={<Skills />} />
+                    <Route path="projects" element={<Projects />} />
+                    <Route path="contact" element={<Contact />} />
+                    <Route path="github" element={<GitHubActivity />} />
+                    <Route path="coding-activity" element={<CodingActivity />} />
+                  </Route>
+                </Routes>
+              </Suspense>
+            </AnimatePresence>
+            
+            <ChatBot />
+          </div>
+        </Router>
+      </AdminProvider>
     </>
   );
 }

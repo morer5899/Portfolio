@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAdmin } from '../../context/AdminContext'; // Add this import
 
-const AdminLogin = ({ onLogin }) => {
+const AdminLogin = () => { // Remove onLogin prop
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -13,6 +14,7 @@ const AdminLogin = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAdmin(); // Get login function from context
 
   const handleChange = (e) => {
     setCredentials({
@@ -31,16 +33,19 @@ const AdminLogin = ({ onLogin }) => {
       const response = await axios.post('https://portfolio-backend-7k3o.onrender.com/api/admin/login', credentials);
       if (response.data.success) {
         localStorage.setItem('adminToken', response.data.token);
-        onLogin();
+        login(response.data.token); // Use context login instead of onLogin
         navigate('/admin/dashboard');
       }
     } catch (error) {
       if (error.response?.status === 401) {
         setError('Invalid credentials. Please try again.');
       } else {
-        // Fallback for development - simple credential check
+        // Fallback to demo credentials if backend is not available
         if (credentials.username === 'admin' && credentials.password === 'admin123') {
-          onLogin();
+          // Create a demo token
+          const demoToken = 'demo-token-' + Date.now();
+          localStorage.setItem('adminToken', demoToken);
+          login(demoToken); // Use context login
           navigate('/admin/dashboard');
         } else {
           setError('Invalid credentials. Please try again.');

@@ -6,6 +6,14 @@ export const IS_DEV = process.env.NODE_ENV === 'development';
 
 // Use localhost in development, production URL in production
 export const getApiUrl = (path) => {
-  const baseUrl = IS_DEV ? 'http://localhost:5000' : API_BASE_URL;
-  return `${baseUrl}${path}`;
+  const formattedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${formattedPath}`;
+};
+
+export const PLATFORM_URLS = {
+  leetcode: (username) => `https://leetcode.com/${username}/`,
+  gfg: (username) => `https://auth.geeksforgeeks.org/user/${username}/practice/`,
+  hackerrank: (username) => `https://www.hackerrank.com/profile/${username}`,
+  codeforces: (username) => `https://codeforces.com/profile/${username}`,
+  codechef: (username) => `https://www.codechef.com/users/${username}`
 };
